@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>贪吃蛇</title>
+    <style>
+        *{margin: 0;padding: 0;}
+        div{
+            margin: 0 auto;
+            width: 500px;
+            height: 500px;
+            position: relative;
+        }
+        table{
+            width: 500px;
+            height: 500px;
+            border-collapse: collapse; 
+            position: absolute;
+        }
+        table tr{
+            width: 500px;
+            height: 25px;
+        }
+        table tr td{
+            width: 50px;
+            height: 25px;
+            background-color: red;
+        }
+        div .start{
+            width: 200px;
+            height: 80px;
+            text-align: center;
+            line-height: 80px;
+            font-size: 50px;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%,-50%);
+            position: absolute;
+        }
+        div .end{
+            width: 200px;
+            height: 80px;
+            display: none;
+            text-align: center;
+            line-height: 80px;
+            font-size: 50px;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%,-50%);
+            position: absolute;
+        }
+        
+        div .score{
+            width: 60px;
+            height: 40px;
+            text-align: center;
+            line-height: 40px;
+            font-size: 25px;
+            position: absolute;
+            left: 100%;
+            background-color: hotpink;
+            display: none;
+        }
+        div .score_num{
+            width: 60px;
+            height: 40px;
+            text-align: center;
+            line-height: 40px;
+            font-size: 25px;
+            position: absolute;
+            left: 100%;
+            transform: translate(+60px,0);
+            background-color: hotpink;
+            display: none;
+        }
+    </style>
+    <script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
+    <script>
+        $(window).ready(function(){
+            var snake_head = [10,10];
+            var snake_body = [[11,10],[12,10],[13,10],[14,10]];
+            var dircetion = 87;
+            var last_body = [];
+            var food_random_x = Math.round(Math.random()*20);
+            var food_random_y = Math.round(Math.random()*20);
+            var score_num = 0;
+            snake_body.unshift(snake_head);
+            console.log(snake_body);
+            $('div>p').click(function(){
+                $('.start').css('display','none');
+                $('.score').css('display','block');
+                $('.score_num').css('display','block');
+                snake_body.forEach(function(item)
+                {
+                    $(`table tr:nth-child(${item[0]})>td:nth-child(${item[1]})`).css('backgroundColor','green');
+                })
+                $(`table tr:nth-child(${food_random_x})>td:nth-child(${food_random_y})`).css('backgroundColor','yellow');
+                $(window).keydown(function(event){
+                    if(dircetion==87&&event.which!=83||dircetion==83&&event.which!=87||dircetion==65&&event.which!=68||dircetion==68&&event.which!=65){
+                        dircetion=event.which;
+                        console.log(event.which)
+                    }
+                    
+                })
+                var start = setInterval(function(){
+                    switch(dircetion){
+                        case 87:
+                            snake_head = JSON.parse(JSON.stringify(snake_body[0]));
+                            snake_head[0] -= 1;
+                            snake_move(snake_head);
+                            break;
+                        case 65:
+                            snake_head = JSON.parse(JSON.stringify(snake_body[0]));
+                            snake_head[1]-=1;
+                            snake_move(snake_head);
+                            break;
+                        case 83:
+                            snake_head = JSON.parse(JSON.stringify(snake_body[0]));
+                            snake_head[0]+=1;
+                            snake_move(snake_head);
+                            break;
+                        case 68:
+                            snake_head = JSON.parse(JSON.stringify(snake_body[0]));
+                            snake_head[1]+=1;
+                            snake_move(snake_head);
+                            break;
+                    }
+                    if(snake_head[0]<=0||snake_head[0]>20||snake_head[1]<=0||snake_head[1]>20){
+                        clearInterval(start);
+                        $('div table tr td').css('backgroundColor','red');
+                        $('div .start').css('display','none');
+                        $('div .end').css('display','block');
+                    }
+                    var peng_snake = setInterval(function(){
+                        let i=0;
+                        snake_body.forEach(function(item){
+                            if(i>0){
+                                if(snake_head[0]==item[0]&&snake_head[1]==item[1]){
+                                    clearInterval(peng_snake);
+                                    clearInterval(start);
+                                    $('div table tr td').css('backgroundColor','red');
+                                    $('div .start').css('display','none');
+                                    $('div .end').css('display','block');
+                                }
+                            }
+                            i++;
+                        })
+                        clearInterval(peng_snake);
+                    },10)
+                    
+                    if(snake_head[0]==food_random_x&&snake_head[1]==food_random_y){
+                        food_change();
+                        snake_body.push(last_body);
+                        $(`table tr:nth-child(${snake_head[0]})>td:nth-child(${snake_head[1]})`).css('backgroundColor','green');
+                        score_num++;
+                        $('.score_num').html(score_num);
+                    }
+                },100)
+
+
+                function snake_move(snake_head){
+                    snake_body.unshift(snake_head);
+                    last_body=snake_body.pop();
+                    $(`table tr:nth-child(${snake_head[0]})>td:nth-child(${snake_head[1]})`).css('backgroundColor','green');
+                    $(`table tr:nth-child(${last_body[0]})>td:nth-child(${last_body[1]})`).css('backgroundColor','red');
+                    console.log(snake_body);
+                }
+
+                function food_change(){
+                    let state;
+                    var food_timer = setInterval(function(){
+                        state = 0;
+                        food_random_x = Math.round(Math.random()*(20-1)+1);
+                        food_random_y = Math.round(Math.random()*(20-1)+1);
+                        snake_body.forEach(function(item){
+                            if(item[0]==food_random_x&&item[1]==food_random_y){
+                                state = 1;
+                            }
+                        })
+                        if(state==0){
+                            clearInterval(food_timer);
+                            $(`table tr:nth-child(${food_random_x})>td:nth-child(${food_random_y})`).css('backgroundColor','yellow');
+                        }
+                    },10)
+                }
+            });
+        })
+    </script>
+</head>
+<body>
+    <div>
+        <table>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
+        <p class="start">开始游戏</p>
+        <p class="end">游戏结束</p>
+        <p class="score">分数:</p>
+        <p class="score_num">0</p>
+    </div>
+</body>
+</html>
